@@ -1,0 +1,37 @@
+hydra:
+  searchpath:
+    - file://${oc.env:PWD}/verl/verl/trainer/config
+
+defaults:
+  - ppo_trainer
+  - _self_
+
+data:
+
+  prompt_key: prompt
+  reward_fn_key: data_source
+  return_raw_chat: True
+  truncation: error
+
+algorithm:
+
+  adv_estimator: processlight_tree
+  processlight:
+    eta: 0.3
+    lambda_step: 0.3
+    format_coef: 0.8
+    use_tree: True
+    use_importance: True
+    use_step_quality: True
+
+reward:
+
+  reward_manager:
+    source: importlib
+    name: ProcessLightRewardManager
+    module:
+      path: ${oc.env:PWD}/src/rltsc/trainer/reward_manager.py
+      name: ProcessLightRewardManager
+  processlight:
+    score_mode: full
+    invalid_phase_reward: -1.0

@@ -1,0 +1,79 @@
+diff --git a/verl/trainer/config/actor/actor.yaml b/verl/trainer/config/actor/actor.yaml
+index ce426230..086f7d20 100644
+--- a/verl/trainer/config/actor/actor.yaml
++++ b/verl/trainer/config/actor/actor.yaml
+@@ -314,4 +314,3 @@ qat:
+ 
+   # Path to vLLM quantization config JSON file
+   quantization_config_path: null
+-
+diff --git a/verl/trainer/ppo/metric_utils.py b/verl/trainer/ppo/metric_utils.py
+index 946f7611..cbc63b1f 100644
+--- a/verl/trainer/ppo/metric_utils.py
++++ b/verl/trainer/ppo/metric_utils.py
+@@ -551,6 +551,10 @@ def calc_maj_val(data: list[dict[str, Any]], vote_key: str, val_key: str) -> flo
+     return maj_val
+ 
+ 
++def _is_numeric_validation_metric(value: Any) -> bool:
++    return isinstance(value, (int, float, bool, np.number))
++
++
+ def process_validation_metrics(
+     data_sources: list[str], sample_uids: list[str], infos_dict: dict[str, list[Any]], seed: int = 42
+ ) -> dict[str, dict[str, dict[str, float]]]:
+@@ -636,11 +640,9 @@ def process_validation_metrics(
+             var_dict = uid_dict.setdefault(uid, {})
+ 
+             for var_name, var_vals in var2vals.items():
+-                # skip empty or string values
+-                if not var_vals or isinstance(var_vals[0], str):
++                if not var_vals or not _is_numeric_validation_metric(var_vals[0]):
+                     continue
+ 
+-                # compute mean and std
+                 n_resps = len(var_vals)
+                 metric = {f"mean@{n_resps}": float(np_mean(var_vals))}
+ 
+diff --git a/verl/trainer/ppo/ray_trainer.py b/verl/trainer/ppo/ray_trainer.py
+index 441f1a5a..fb047667 100644
+--- a/verl/trainer/ppo/ray_trainer.py
++++ b/verl/trainer/ppo/ray_trainer.py
+@@ -133,6 +133,18 @@ def compute_response_mask(data: DataProto):
+     return attention_mask[:, -response_length:]
+ 
+ 
++def _compute_processlight_reward_metrics(non_tensor_batch: dict[str, Any]) -> dict[str, float]:
++    from rltsc.trainer.metrics import compute_processlight_reward_metrics
++
++    return compute_processlight_reward_metrics(non_tensor_batch)
++
++
++def _compute_processlight_seen_rollouts(global_steps: int, non_tensor_batch: dict[str, Any]) -> dict[str, float]:
++    from rltsc.trainer.metrics import compute_processlight_seen_rollouts
++
++    return compute_processlight_seen_rollouts(global_steps, non_tensor_batch)
++
++
+ def compute_advantage(
+     data: DataProto,
+     adv_estimator: AdvantageEstimator,
+@@ -206,6 +218,9 @@ def compute_advantage(
+             adv_kwargs["index"] = data.non_tensor_batch["uid"]
+         if "reward_baselines" in data.batch:  # optional
+             adv_kwargs["reward_baselines"] = data.batch["reward_baselines"]
++        if adv_estimator == "processlight_tree":
++            adv_kwargs["non_tensor_batch"] = data.non_tensor_batch
++            adv_kwargs["batch"] = data.batch
+         # GDPO: pass raw data for per-dimension reward extraction
+         if adv_estimator in (AdvantageEstimator.GDPO, "gdpo"):
+             adv_kwargs["non_tensor_batch"] = data.non_tensor_batch
+@@ -1498,6 +1513,8 @@ class RayPPOTrainer:
+ 
+                         if reward_extra_infos_dict:
+                             batch.non_tensor_batch.update({k: np.array(v) for k, v in reward_extra_infos_dict.items()})
++                            metrics.update(_compute_processlight_reward_metrics(batch.non_tensor_batch))
++                            metrics.update(_compute_processlight_seen_rollouts(self.global_steps, batch.non_tensor_batch))
+ 
+                         # compute rewards. apply_kl_penalty if available
+                         if self.config.algorithm.use_kl_in_reward:

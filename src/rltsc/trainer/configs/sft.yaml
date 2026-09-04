@@ -1,0 +1,13 @@
+hydra:
+  searchpath:
+    - file://${oc.env:PWD}/verl/verl/trainer/config
+
+defaults:
+  - sft_trainer_engine
+  - _self_
+
+data:
+
+  truncation: error
+  messages_key: messages
+  ignore_input_ids_mismatch: True
