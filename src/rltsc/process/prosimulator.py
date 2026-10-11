@@ -1,54 +1,24 @@
 from __future__ import annotations
 
-
+import asyncio
 import json
-
-
 import logging
-
-
 import re
-
-
 import shutil
-
-
 import time
-
-
 from collections import defaultdict
-
-
 from dataclasses import asdict
-
-
 from pathlib import Path
-
-
 from typing import Any
 
-
-import asyncio
-
-
 import aiofiles
-
-
 from openai import AsyncOpenAI
 
-
 from rltsc.atlm.async_cityflow_env import AsyncAction, AsyncCityFlowEnv
-
-
 from rltsc.atlm.configs import CityFlowConfig, LLMConfig, SimulatorConfig
-
-
 from rltsc.atlm.snapshot_io import dump_cityflow_snapshot
 
-
 from .prompts import PROMPTS
-
-
 from .utils import fnumber, table_to_dict
 
 
@@ -200,7 +170,7 @@ class ProSimulateWrapper:
 
             final_action_list = {}
 
-            for inter_id, phase in zip(ready_inter_ids, results):
+            for inter_id, phase in zip(ready_inter_ids, results, strict=False):
                 final_action_list[inter_id] = AsyncAction(
                     phase_id=self.phases_id[phase],
                     duration=float(int(float(self.phase_duration))),

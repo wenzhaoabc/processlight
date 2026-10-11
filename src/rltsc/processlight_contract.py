@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-
 from typing import Any
-
 
 PROMPT_STATE_REQUIRED_KEYS = ("movement", "phase", "neighbor", "history", "simulation")
 

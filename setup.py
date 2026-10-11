@@ -1,6 +1,5 @@
 from setuptools import find_packages, setup
 
-
 setup(
     name="rltsc",
     version="0.1.0",

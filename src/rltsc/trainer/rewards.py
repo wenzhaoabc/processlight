@@ -1,15 +1,9 @@
 from __future__ import annotations
 
-
 from dataclasses import dataclass
-
-
 from typing import Any
 
-
 from rltsc.trainer.parser import EVIDENCE_STEP_NAMES, STEP_DISPLAY_NAMES, normalize_claim_text, parse_processlight_response
-
-
 from rltsc.verify import ClaimStatus, ClaimVerdict, verify_claims
 
 

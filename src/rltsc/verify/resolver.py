@@ -1,10 +1,7 @@
 from __future__ import annotations
 
-
 import re
-
 from typing import Any
-
 
 from rltsc.verify.utils import ALIASES, UNKNOWN, norm_key, norm_text, number, parse_value, sequence_index, sequence_values
 

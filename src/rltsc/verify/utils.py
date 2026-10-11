@@ -1,10 +1,7 @@
 from __future__ import annotations
 
-
 import ast
-
 import re
-
 from typing import Any
 
 
@@ -103,7 +100,7 @@ def number(value: Any) -> float | UnknownValue:
 
 def equal_value(actual: Any, expected: Any) -> bool:
     if isinstance(actual, list) and isinstance(expected, list):
-        return len(actual) == len(expected) and all(equal_value(left, right) for left, right in zip(actual, expected))
+        return len(actual) == len(expected) and all(equal_value(left, right) for left, right in zip(actual, expected, strict=False))
 
     actual_number = number(actual)
 

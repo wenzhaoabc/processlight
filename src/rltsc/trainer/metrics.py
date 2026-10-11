@@ -1,11 +1,8 @@
 from __future__ import annotations
 
-
 from typing import Any
 
-
 import numpy as np
-
 
 STEP_METRIC_NAMES = ("phase_mapping", "local_demand", "downstream", "neighbor_coordination", "flow_trend", "fairness")
 

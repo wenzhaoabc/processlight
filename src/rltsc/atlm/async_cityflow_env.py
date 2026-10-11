@@ -1,26 +1,13 @@
 import json
-
-
-import os
-
-
 import math
-
-
-from pathlib import Path
-
-
-from typing import Callable, Optional, Any, Literal, Dict, List
-
-
+import os
+from collections.abc import Callable
 from dataclasses import dataclass
-
-
 from itertools import chain
-
+from pathlib import Path
+from typing import Any, Literal
 
 import cityflow
-
 
 from rltsc.atlm.configs import CityFlowConfig, VehicleInfo
 
@@ -190,7 +177,7 @@ class MetricsTracker:
 
         self.eng = eng
 
-        self.veh_waiting_time: Dict[str, dict] = {}
+        self.veh_waiting_time: dict[str, dict] = {}
 
         self.vehicles = []
 
@@ -200,13 +187,13 @@ class MetricsTracker:
 
         self.last_active_vehicles: set[str] = set()
 
-        self.vehicle_enter_time: Dict[str, float] = {}
+        self.vehicle_enter_time: dict[str, float] = {}
 
-        self.vehicle_leave_time: Dict[str, float] = {}
+        self.vehicle_leave_time: dict[str, float] = {}
 
-        self.completed_travel_times: Dict[str, float] = {}
+        self.completed_travel_times: dict[str, float] = {}
 
-        self.last_vehicle_speeds: Dict[str, float] = {}
+        self.last_vehicle_speeds: dict[str, float] = {}
 
         self.emergency_braking_count: int = 0
 
@@ -379,7 +366,7 @@ class MetricsTracker:
 
         self.last_vehicle_speeds = current_speeds
 
-    def get_metrics(self) -> Dict[str, float]:
+    def get_metrics(self) -> dict[str, float]:
         current_running = self.eng.get_vehicle_count()
 
         throughput = len(self.all_seen_vehicles) - current_running
@@ -485,7 +472,7 @@ class AsyncCityFlowEnv:
 
         self.max_simulation_seconds = max_simulation_seconds
 
-        with open(Path(config.dir) / config.roadnetFile, "r", encoding="utf-8") as f:
+        with open(Path(config.dir) / config.roadnetFile, encoding="utf-8") as f:
             self.roadnet: dict[str, Any] = json.load(f)
 
         self.inters_state = [
@@ -601,11 +588,11 @@ class AsyncCityFlowEnv:
 
                     self._log_phase_change(state.intersection_id, self.current_time, state.current_phase)
 
-        ready_inters: List[IntersectionID] = self.find_ready_intersections()
+        ready_inters: list[IntersectionID] = self.find_ready_intersections()
 
-        obs: Dict[IntersectionID, Any] = {}
+        obs: dict[IntersectionID, Any] = {}
 
-        rewards: Dict[IntersectionID, float] = {}
+        rewards: dict[IntersectionID, float] = {}
 
         for inter_id in ready_inters:
             obs[inter_id] = self.obs_fn(self.eng, inter_id)
@@ -614,7 +601,7 @@ class AsyncCityFlowEnv:
 
         done = abs(self.current_time - self.max_simulation_seconds) < 1e-9
 
-        info: Dict[str, Any] = {
+        info: dict[str, Any] = {
             "current_time": self.current_time,
             "ready_intersections": ready_inters,
         }
@@ -650,7 +637,7 @@ class AsyncCityFlowEnv:
 
             self._log_phase_change(state.intersection_id, 0.0, init_phase)
 
-    def _update_intersection_tl_states(self, actions: Dict[IntersectionID, AsyncAction]) -> None:
+    def _update_intersection_tl_states(self, actions: dict[IntersectionID, AsyncAction]) -> None:
         for inter_id, action in actions.items():
             state = self.get_intersection_tl_state(inter_id)
 
@@ -749,7 +736,7 @@ class AsyncCityFlowEnv:
 
                     self.lane_vehicle_waiting_time[lane][v_id] += self.config.interval
 
-    def get_final_metrics(self) -> Dict[str, float]:
+    def get_final_metrics(self) -> dict[str, float]:
         return self.metric_tracker.get_metrics()
 
     def _reset_log_file(self, intersection_id: str):
@@ -767,8 +754,8 @@ class AsyncCityFlowEnv:
         with open(file_path, "a") as f:
             f.write(f"{time},{phase_id}\n")
 
-    def _compute_next_event_time(self) -> Optional[Seconds]:
-        next_times: List[Seconds] = []
+    def _compute_next_event_time(self) -> Seconds | None:
+        next_times: list[Seconds] = []
 
         for state in self.inters_state:
             if state.next_action_time > self.current_time:
@@ -784,8 +771,8 @@ class AsyncCityFlowEnv:
 
         return candidate
 
-    def find_ready_intersections(self) -> List[IntersectionID]:
-        ready: List[IntersectionID] = []
+    def find_ready_intersections(self) -> list[IntersectionID]:
+        ready: list[IntersectionID] = []
 
         for state in self.inters_state:
             if state.next_action_time is None or abs(state.next_action_time - self.current_time) < 1e-9:
@@ -793,10 +780,10 @@ class AsyncCityFlowEnv:
 
         return ready
 
-    def _default_get_obs(self, eng: CityFlowEngine, intersection_id: IntersectionID) -> Dict[str, Any]:
-        lane_waiting: Dict[str, int] = eng.get_lane_waiting_vehicle_count()
+    def _default_get_obs(self, eng: CityFlowEngine, intersection_id: IntersectionID) -> dict[str, Any]:
+        lane_waiting: dict[str, int] = eng.get_lane_waiting_vehicle_count()
 
-        lane_veh_cnt: Dict[str, int] = eng.get_lane_vehicle_count()
+        lane_veh_cnt: dict[str, int] = eng.get_lane_vehicle_count()
 
         obs = {
             "time": float(eng.get_current_time()),
@@ -808,7 +795,7 @@ class AsyncCityFlowEnv:
         return obs
 
     def _default_get_reward(self, eng: CityFlowEngine, intersection_id: IntersectionID) -> float:
-        lane_waiting: Dict[str, int] = eng.get_lane_waiting_vehicle_count()
+        lane_waiting: dict[str, int] = eng.get_lane_waiting_vehicle_count()
 
         total_waiting = sum(lane_waiting.values())
 
@@ -863,7 +850,7 @@ class AsyncCityFlowEnv:
     def _get_lane_turn_direction(self, lane_id: str) -> str:
         turn_directions = []
 
-        for inter, phases in self.intersections_phases_lanes.items():
+        for _inter, phases in self.intersections_phases_lanes.items():
             for phase_name, lanes in phases.items():
                 if lane_id in lanes["from"]:
                     turn_directions.append(phase_name[1])

@@ -132,6 +132,25 @@ outputs/processlight_sim/action_logs/*_action_log.json
 outputs/processlight_sim/processlight.log
 ```
 
+## Generate Training Data
+
+- `samples_claims.py` : Generate reference claims.
+- `samples_simu.py` : Collect the best phase.
+- `samples_importance.py` : Calculate importance scores for each step.
+
+Collect simulation logs with `save_snapshot=True`. Each run needs `simulation_result.json`, `action_logs/`, and `archives/`. Set `OPENAI_API_KEY` and `OPENAI_BASE_URL` for response generation; importance scoring needs a vLLM endpoint with prompt logprobs. Execute the following commands and build the training datasets:
+
+```bash
+python -m rltsc.databuild.samples_simu --run-dir outputs/processlight_sim \
+  --roadnet datasets/hangzhou/roadnet_4_4.json --flow datasets/hangzhou/hangzhou1.json --output-dir data/simu
+python -m rltsc.databuild.samples_claims --input data/simu/origin_simu.json \
+  --model your-teacher-model --output-dir data/claims
+python -m rltsc.databuild.samples_importance --origin data/simu/origin_simu.json \
+  --input data/claims/importance_data.json --claims data/claims/claims_samples.json \
+  --model your-scoring-model --base-url http://localhost:8000/v1 --output-dir data/importance
+```
+
+
 ## Prepare Training Data
 
 The trainer expects fixed ProcessLight JSON files and converts them into `verl` parquet files.

@@ -1,11 +1,7 @@
 from __future__ import annotations
 
-
 import re
-
-
 from dataclasses import dataclass
-
 
 STEP_DISPLAY_NAMES = (
     "Phase Mapping",

@@ -1,15 +1,11 @@
 from __future__ import annotations
 
-
 from typing import Any
-
 
 import torch
 
-
 try:
     from verl import DataProto
-
     from verl.experimental.reward_loop.reward_manager.base import RewardManagerBase
 
 
@@ -28,8 +24,6 @@ except ModuleNotFoundError:
 
 
 from rltsc.trainer.parser import EVIDENCE_STEP_NAMES, STEP_DISPLAY_NAMES, char_span_to_token_span, parse_processlight_response
-
-
 from rltsc.trainer.rewards import compute_processlight_reward
 
 
